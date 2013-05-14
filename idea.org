@@ -1,0 +1,34 @@
+
+
+plugin Oro => {
+  meineDB => {
+    file => 'sqlite'
+  },
+  default => {
+    driver => 'MySQL'
+...
+  }
+};
+
+->oro_view();
+
+
+# Sollte immer unter einer Authentifizierung und nur über https erlaubt sein!
+$r->route('/showdb')->oro_viewer;
+
+Dabei wird eine Rest-Anzeige gegeben, die folgendes darstellt (ähnlich MyPHPAdmin):
+Links die Datenbanken (klein), mit Tabellen, Indizes, Views etc.
+Rechts lassen sich die Tabelleninhalte auflisten.
+Außerdem gibt es noch ein Fenster für SQL-Befehle zum Testen.
+
+Das ganze sollte sehr puristisch sein und nicht beeindrucken.
+Man sollte aber schnell einzelne Zellen verändern können.
+Und Reihen löschen.
+
+Vielleicht an "Adminer" orientieren?
+
+
+Besser:
+Den Viewer mehr general purpose andenken!
+So kann die Anzeige auch zur Administration von Usern etc. dienen,
+indem einem Helper entsprechende Informationen übergeben werden.

@@ -93,7 +93,6 @@ sub register {
 	};
       };
       $x .= "</tr>\n  </thead>\n";
-
       $x .= "  <tfoot>\n";
       $x .= '    <tr><td class="oro-pagination" colspan="' . scalar @order . '">';
 
@@ -105,7 +104,6 @@ sub register {
 
       $x .= "</td></tr>\n";
       $x .= "  </tfoot>\n";
-
       $x .= "  <tbody>\n";
 
       # HTML;

@@ -16,6 +16,7 @@ WriteMakefile(
     'Mojolicious' => 3.43,
     'Math::Random::Secure' => 0.06,
     'Mojolicious::Plugin::Oro' => 0.05,
+    'Mojolicious::Plugin::TagHelpers::Pagination' => 0.01,
     'DBIx::Oro' => 0.29
     },
   META_MERGE   => {

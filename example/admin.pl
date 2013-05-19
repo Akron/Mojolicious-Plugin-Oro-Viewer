@@ -2,13 +2,6 @@
 use lib '../lib';
 use Mojolicious::Lite;
 
-plugin 'TagHelpers::Pagination' => {
-    separator => '',
-    ellipsis => '<span class="page-ellipsis">...</span>',
-    current => '<span>{current}</span>',
-    page => '<span class="page-nr">{page}</span>'
-};
-
 plugin Oro => {
   default => {
     file => 'example.sqlite',
@@ -79,6 +72,15 @@ BOOK
   }
 };
 
+plugin 'TagHelpers::Pagination' => {
+    separator => '',
+    ellipsis => '<span><i class="icon-ellipsis-horizontal"></i></span>',
+    current => '<span>{current}</span>',
+    page => '<span class="page-nr">{page}</span>',
+    next => '<span></span>',
+    prev => '<span></span>'
+};
+
 plugin 'Oro::Viewer' => {
   default_count => 10,
   max_count => 15
@@ -91,10 +93,10 @@ get '/' => sub {
     oro_view => {
       table => 'Name',
       display => [
-	Vorname => 'prename',
-	Nachname => 'surname',
-	Alter => 'age',
-	'Löschen' => sub {
+        Firstname => 'prename',
+	Surname   => 'surname',
+	Age       => ['age', 'integer'],
+	Delete => sub {
 	  my ($c, $row) = @_;
 	  return '<a href="/delete?user=' . $row->{id} . '">Delete user</a>';
 	}
@@ -111,54 +113,7 @@ __DATA__
 <!DOCTYPE html>
 <html>
   <head><title>Sort</title></head>
-%= stylesheet begin
-html {
-  font-family: tahoma, verdana, arial;
-}
-.oro-view {
-  border: 5px solid blue;
-  margin: 20px auto;
-}
-.oro-pagination span {
-  display: inline-block;
-  width: 2em;
-  margin: 0 .2em;
-}
-
-.oro-pagination a span {
-  background-color: #55f;
-}
-
-.oro-pagination a[rel="self"] span {
-  background-color: white;
-}
-
-thead, tfoot {
-  background-color: blue;
-  color: white;
-}
-tfoot {
-  text-align: center;
-}
-
-thead th, tfoot td {
- padding: .2em 2em .2em 2em;
-}
-thead th.oro-ascending:after {
- content: 'v'
-}
-
-thead th.oro-descending:after {
- content: '^'
-}
-
-thead a, tfoot a {
-  color: white;
-  font-weight: bold;
-  text-decoration: none;
-}
-
-% end
+%= stylesheet '/css/style.css'
   <body>
 %= oro_view( stash 'oro_view' );
   </body>

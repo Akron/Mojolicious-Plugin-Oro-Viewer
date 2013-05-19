@@ -18,7 +18,7 @@
 #     META_MERGE => { requires=>{ perl=>q[5.010001] } }
 #     MIN_PERL_VERSION => q[5.010001]
 #     NAME => q[Mojolicious::Plugin::Oro::Viewer]
-#     PREREQ_PM => { Test::More=>q[0], Mojolicious::Plugin::Oro=>q[0.05], Math::Random::Secure=>q[0.06], Mojolicious=>q[3.43], DBIx::Oro=>q[0.29] }
+#     PREREQ_PM => { Test::More=>q[0], Mojolicious::Plugin::Oro=>q[0.05], Math::Random::Secure=>q[0.06], Mojolicious::Plugin::TagHelpers::Pagination=>q[0.01], Mojolicious=>q[3.43], DBIx::Oro=>q[0.29] }
 #     TEST_REQUIRES => {  }
 #     VERSION_FROM => q[lib/Mojolicious/Plugin/Oro/Viewer.pm]
 #     test => { TESTS=>q[t/*.t] }
@@ -164,7 +164,7 @@ C_FILES  =
 O_FILES  = 
 H_FILES  = 
 MAN1PODS = 
-MAN3PODS = 
+MAN3PODS = lib/Mojolicious/Plugin/Oro/Viewer.pm
 
 # Where is the Config information that we are using/depend on
 CONFIGDEP = $(PERL_ARCHLIB)$(DFSEP)Config.pm $(PERL_INC)$(DFSEP)config.h
@@ -410,8 +410,10 @@ POD2MAN_EXE = $(PERLRUN) "-MExtUtils::Command::MM" -e pod2man "--"
 POD2MAN = $(POD2MAN_EXE)
 
 
-manifypods : pure_all 
-	$(NOECHO) $(NOOP)
+manifypods : pure_all  \
+	lib/Mojolicious/Plugin/Oro/Viewer.pm
+	$(NOECHO) $(POD2MAN) --section=3 --perm_rw=$(PERM_RW) \
+	  lib/Mojolicious/Plugin/Oro/Viewer.pm $(INST_MAN3DIR)/Mojolicious::Plugin::Oro::Viewer.$(MAN3EXT) 
 
 
 
@@ -500,6 +502,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '  Math::Random::Secure: 0.06' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious: 3.43' >> META_new.yml
 	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::Oro: 0.05' >> META_new.yml
+	$(NOECHO) $(ECHO) '  Mojolicious::Plugin::TagHelpers::Pagination: 0.01' >> META_new.yml
 	$(NOECHO) $(ECHO) '  perl: 5.010001' >> META_new.yml
 	$(NOECHO) $(ECHO) 'version: 0.01' >> META_new.yml
 	-$(NOECHO) $(MV) META_new.yml $(DISTVNAME)/META.yml
@@ -542,6 +545,7 @@ metafile : create_distdir
 	$(NOECHO) $(ECHO) '            "Math::Random::Secure" : "0.06",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious" : "3.43",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::Oro" : "0.05",' >> META_new.json
+	$(NOECHO) $(ECHO) '            "Mojolicious::Plugin::TagHelpers::Pagination" : "0.01",' >> META_new.json
 	$(NOECHO) $(ECHO) '            "perl" : "5.010001"' >> META_new.json
 	$(NOECHO) $(ECHO) '         }' >> META_new.json
 	$(NOECHO) $(ECHO) '      }' >> META_new.json
@@ -852,6 +856,7 @@ ppd :
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Math::Random::Secure" VERSION="0.06" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::" VERSION="3.43" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::Oro" VERSION="0.05" />' >> $(DISTNAME).ppd
+	$(NOECHO) $(ECHO) '        <REQUIRE NAME="Mojolicious::Plugin::TagHelpers::Pagination" VERSION="0.01" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <ARCHITECTURE NAME="x86_64-linux-thread-multi-5.14" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '        <CODEBASE HREF="" />' >> $(DISTNAME).ppd
 	$(NOECHO) $(ECHO) '    </IMPLEMENTATION>' >> $(DISTNAME).ppd

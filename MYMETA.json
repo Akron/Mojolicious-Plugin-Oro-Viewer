@@ -36,6 +36,7 @@
             "Math::Random::Secure" : "0.06",
             "Mojolicious" : "3.43",
             "Mojolicious::Plugin::Oro" : "0.05",
+            "Mojolicious::Plugin::TagHelpers::Pagination" : "0.01",
             "perl" : "5.010001"
          }
       }

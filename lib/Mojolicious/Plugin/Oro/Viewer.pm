@@ -195,7 +195,7 @@ sub register {
 	  };
 
 	  # Create links
-	  $x .= '"><a href="' . $c->url_with->query([%hash]) . '">' .
+	  $x .= '"><a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
 	        $_->[0] . '</a></th>';
 	}
 

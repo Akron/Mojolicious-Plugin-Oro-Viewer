@@ -112,8 +112,10 @@ __DATA__
 @@ index.html.ep
 <!DOCTYPE html>
 <html>
-  <head><title>Sort</title></head>
+  <head>
+    <title>Sort</title>
 %= stylesheet '/css/style.css'
+  </head>
   <body>
 %= oro_view( stash 'oro_view' );
   </body>

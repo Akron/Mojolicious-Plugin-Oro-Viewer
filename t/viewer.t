@@ -319,7 +319,7 @@ $t->get_ok('/?sortBy=surname&count=2&fields=prename,age')
   ->text_is('tbody tr td a[href]', 'Delete')
   ->text_is('th.oro-sortable.oro-ascending a[href]', 'Vorname')
   ->text_is('th:nth-child(3)', 'Action')
-  ->text_is('.oro-pagination a:nth-last-child(2) span', 10);
+  ->text_is('.pagination a:nth-last-child(2) span', 10);
 
 
 no_warn {
@@ -342,7 +342,7 @@ $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex')
   ->text_is('th:nth-child(2) a', 'Geschlecht')
   ->text_is('th:nth-child(3) a', 'Alter')
   ->text_is('th:nth-child(4)', 'Action')
-  ->text_is('.oro-pagination a:nth-last-child(2) span', 10);
+  ->text_is('.pagination a:nth-last-child(2) span', 10);
 
 $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPage=2')
   ->text_is('tbody tr td', 'Charles')
@@ -359,7 +359,7 @@ $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPag
   ->text_is('th:nth-child(2) a', 'Geschlecht')
   ->text_is('th:nth-child(3) a', 'Alter')
   ->text_is('th:nth-child(4)', 'Action')
-  ->text_is('.oro-pagination a:nth-last-child(2) span', 10);
+  ->text_is('.pagination a:nth-last-child(2) span', 10);
 
 $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPage=2&filterBy=surname&filterOp=startsWith&filterValue=W')
   ->text_is('tbody tr td', 'William')
@@ -376,7 +376,7 @@ $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPag
   ->text_is('th:nth-child(2) a', 'Geschlecht')
   ->text_is('th:nth-child(3) a', 'Alter')
   ->text_is('th:nth-child(4)', 'Action')
-  ->text_is('.oro-pagination a:nth-last-child(2) span', 3);
+  ->text_is('.pagination a:nth-last-child(2) span', 3);
 
 done_testing;
 

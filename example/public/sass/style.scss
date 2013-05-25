@@ -34,38 +34,39 @@ html {
     font-weight: bold;
     text-decoration: none;
   }
-  .oro-pagination {
-    span {
-      display: inline-block;
-      margin: 0 .2em;
-      line-height: 1.3em;      
-      min-width: 1.7em;
-      height: 1.3em;
-      padding: 0;
-    }
-    a[href] span {
-      background-color: #777;
-    }
-    a span {
-      border-radius: 5px;
-    }  
-    a[rel="self"] span {
-      background-color: white;
-      color: #333;      
-    }
-    a[rel="prev"], a[rel="next"] {
-      text-align: center;
-    }
-    a[rel="prev"] span:after {
-      font-family: 'FontAwesome';
-      content: "\f0d9"
-    }
-    a[rel="next"] span:before {
-      font-family: 'FontAwesome';
-      content: "\f0da"
-    }
-    span.ellipsis:after {
-      content: "\f141"
-    }
+}
+
+.pagination {
+  span {
+    display: inline-block;
+    margin: 0 .2em;
+    line-height: 1.3em;      
+    min-width: 1.7em;
+    height: 1.3em;
+    padding: 0;
+  }
+  a[href] span {
+    background-color: #777;
+  }
+  a span {
+    border-radius: 5px;
+  }  
+  a[rel="self"] span {
+    background-color: white;
+    color: #333;      
+  }
+  a[rel="prev"], a[rel="next"] {
+    text-align: center;
+  }
+  a[rel="prev"] span:after {
+    font-family: 'FontAwesome';
+    content: "\f0d9"
+  }
+  a[rel="next"] span:before {
+    font-family: 'FontAwesome';
+    content: "\f0da"
+  }
+  span.ellipsis:after {
+    content: "\f141"
   }
 }

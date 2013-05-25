@@ -27,7 +27,7 @@ sub register {
   $param ||= {};
 
   # Load parameter from Config file
-  if (my $config_param = $mojo->config('Oro::Viewer')) {
+  if (my $config_param = $mojo->config('Oro-Viewer')) {
     $param = { %$config_param, %$param };
   };
 
@@ -37,7 +37,7 @@ sub register {
 
   # Load pagination plugin
   unless ($mojo->renderer->helpers->{'pagination'}) {
-    $mojo->plugin('TagHelpers::Pagination');
+    $mojo->plugin('TagHelpers-Pagination');
   };
 
   # Establish 'oro_view' helper
@@ -195,7 +195,7 @@ sub register {
 	  };
 
 	  # Create links
-	  $x .= '"><a href="' . $c->url_with->query([%hash]) . '">' .
+	  $x .= '"><a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
 	        $_->[0] . '</a></th>';
 	}
 
@@ -209,7 +209,7 @@ sub register {
 
       # Create table footer with pagination
       $x .= "  <tfoot>\n";
-      $x .= '    <tr><td class="oro-pagination" colspan="' . scalar @order . '">';
+      $x .= '    <tr><td class="pagination" colspan="' . scalar @order . '">';
 
       # Add pagination
       $x .= $c->pagination(

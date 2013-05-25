@@ -27,7 +27,7 @@ sub register {
   $param ||= {};
 
   # Load parameter from Config file
-  if (my $config_param = $mojo->config('Oro::Viewer')) {
+  if (my $config_param = $mojo->config('Oro-Viewer')) {
     $param = { %$config_param, %$param };
   };
 
@@ -209,7 +209,7 @@ sub register {
 
       # Create table footer with pagination
       $x .= "  <tfoot>\n";
-      $x .= '    <tr><td class="oro-pagination" colspan="' . scalar @order . '">';
+      $x .= '    <tr><td class="pagination" colspan="' . scalar @order . '">';
 
       # Add pagination
       $x .= $c->pagination(

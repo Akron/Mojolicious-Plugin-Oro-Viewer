@@ -37,7 +37,7 @@ sub register {
 
   # Load pagination plugin
   unless ($mojo->renderer->helpers->{'pagination'}) {
-    $mojo->plugin('TagHelpers-Pagination');
+    $mojo->plugin('TagHelpers::Pagination');
   };
 
   # Establish 'oro_view' helper

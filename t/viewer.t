@@ -141,7 +141,9 @@ like($view, qr!<th class="oro-sortable oro-active oro-descending">!, 'Correct he
 $view = $app->oro_view(
   display => [
     'Name' => 'prename',
-    Surname => sub { return '--' . $_[1]->{surname} . '--'}
+    Surname => ['surname', process => sub {
+		  return '--' . $_[1]->{surname} . '--'
+		}]
   ],
   query => {
     sortBy => 'prename',
@@ -156,8 +158,8 @@ like($view, qr!<th class="oro-sortable oro-active oro-descending">!, 'Correct he
 
 $view = $app->oro_view(
   display => [
-    'Name' => ['prename', 'test1'],
-    Surname => sub { return ('--' . $_[1]->{surname} . '--', 'test2') }
+    'Name' => ['prename', class => 'test1'],
+    Surname => ['surname', process => sub { return ('--' . $_[1]->{surname} . '--') }, class => 'test2']
   ],
   query => {
     sortBy => 'prename',
@@ -192,8 +194,8 @@ get '/' => sub {
     },
     display    => [
       'Vorname'   => 'prename',
-      'Nachname'  => ['surname', 'test3'],
-      'Alter'     => ['age', 'ageclass'],
+      'Nachname'  => ['surname', class => 'test3'],
+      'Alter'     => ['age', class => 'ageclass'],
       'Action' => sub {
 	# Makes it possible to return json as well on request
 	my $c = shift;
@@ -222,9 +224,9 @@ get '/secure' => sub {
     },
     display    => [
       'Vorname'   => 'prename',
-      'Geschlecht' => ['sex', 'sexclass'],
-      'Nachname'  => ['surname', 'test3'],
-      'Alter'     => ['age', 'ageclass'],
+      'Geschlecht' => ['sex', class => 'sexclass'],
+      'Nachname'  => ['surname', class => 'test3'],
+      'Alter'     => ['age', class => 'ageclass'],
       'Action' => sub {
 	# Makes it possible to return json as well on request
 	my $c = shift;
@@ -252,9 +254,9 @@ get '/secure' => sub {
     },
     display    => [
       'Vorname'   => 'prename',
-      'Nachname'  => ['surname', 'test3'],
-      'Geschlecht' => ['sex', 'sexclass'],
-      'Alter'     => ['age', 'ageclass'],
+      'Nachname'  => ['surname', class => 'test3'],
+      'Geschlecht' => ['sex', class => 'sexclass'],
+      'Alter'     => ['age', class => 'ageclass'],
       'Action' => sub {
 	# Makes it possible to return json as well on request
 	my $c = shift;
@@ -267,7 +269,40 @@ get '/secure' => sub {
   return $c->render( inline => $view );
 };
 
+get '/sortcallback' => sub {
+  my $c = shift;
 
+  my $view = $c->oro_view(
+    oro_handle => 'default',
+    table      => 'Name',
+    default_fields => [qw/id prename surname age/],
+    valid_fields   => [qw/id prename surname age sex/],
+    min_fields     => [qw/id sex/],
+    query      => {
+      sortBy => 'prename',
+      count  => 25,
+      %{ $c->req->params->to_hash }
+    },
+    display    => [
+      'Vorname'   => 'prename',
+      'Nachname'  => ['surname', class => 'test3'],
+
+      'Geschlecht' => ['sex', process => sub {
+	  return '--' . $_[1]->{sex} . '--';
+	}, class => 'sexclass'],
+
+      'Alter'     => ['age', class => 'ageclass'],
+      'Action' => sub {
+	# Makes it possible to return json as well on request
+	my $c = shift;
+	my $row = shift;
+	return '<a href="/delete/?user=' . $row->{id} . '">Delete</a>'
+      }
+    ]
+  );
+
+  return $c->render( inline => $view );
+};
 
 
 $t->get_ok('/')
@@ -378,7 +413,30 @@ $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPag
   ->text_is('th:nth-child(4)', 'Action')
   ->text_is('.pagination a:nth-last-child(2) span', 3);
 
+
+$t->get_ok('/sortcallback?sortBy=surname&count=2&fields=prename,age,check,sex&startPage=2&filterBy=surname&filterOp=startsWith&filterValue=W')
+  ->text_is('tbody tr td', 'William')
+  ->element_exists_not('tbody tr td.test3')
+  ->text_is('tbody tr:nth-child(1) td', 'William')
+  ->text_is('tbody tr:nth-child(1) td.ageclass', 35)
+  ->text_is('tbody tr:nth-child(1) td.sexclass', '--male--')
+  ->text_is('tbody tr:nth-child(2) td', 'David')
+  ->text_is('tbody tr:nth-child(2) td.ageclass', 36)
+  ->text_is('tbody tr:nth-child(1) td.sexclass', '--male--')
+  ->element_exists_not('tbody tr:nth-child(3) td')
+  ->text_is('tbody tr td a[href]', 'Delete')
+  ->text_is('th.oro-sortable.oro-ascending a[href]', 'Vorname')
+  ->text_is('th:nth-child(2) a', 'Geschlecht')
+  ->text_is('th:nth-child(3) a', 'Alter')
+  ->text_is('th:nth-child(4)', 'Action')
+  ->text_is('.pagination a:nth-last-child(2) span', 3);
+
 done_testing;
+
+
+
+
+
 
 __END__
 

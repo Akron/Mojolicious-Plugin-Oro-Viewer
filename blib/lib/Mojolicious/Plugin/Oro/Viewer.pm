@@ -146,24 +146,34 @@ sub register {
 	  my $f = $display->[$i+1];
 
 	  # These fields are not needed
-	  if (!ref $f || ref $f eq 'ARRAY') {
+	  if (!ref $f || (ref $f eq 'ARRAY' && !ref $f->[0])) {
 	    $f = $f->[0] if ref $f;
+
 	    next unless exists $result_fields{$f};
 	  };
 	};
+
 	push(@order, [$display->[$i] => $display->[$i+1]]);
       };
-
 
       # Create table head
       foreach (@order) {
 	$x .= '<th';
 
-	# Simple field value
-	if (!ref $_->[1] || ref $_->[1] eq 'ARRAY') {
+	# Field name
+	my $field;
 
-	  # Field name
-	  my $field = ref $_->[1] ? $_->[1]->[0] : $_->[1];
+	# Simple field value
+	if (!ref $_->[1]) {
+	  $field = $_->[1];
+	}
+
+	# Array field value
+	elsif (ref $_->[1] eq 'ARRAY' && !ref $_->[1][0]) {
+	  $field = $_->[1][0];
+	};
+
+	if ($field) {
 
 	  # Preset sorting field for URL
 	  my %hash = ( sortBy => $field );
@@ -231,29 +241,41 @@ sub register {
 	foreach (@order) {
 	  $x .= '<td';
 
-	  # Field name
+	  # Field name is simple
 	  unless (ref $_->[1]) {
 	    $x .= '>';
 	    $x .= xml_escape( $v->{ $_->[1] } ) if $v->{ $_->[1] };
 	  }
 
-	  # Classes definitions
+	  # Field name complex
 	  else {
-	    my ($value, @classes);
+	    my ($value, %attributes);
 
 	    # Array reference
 	    if (ref $_->[1] eq 'ARRAY') {
-	      (my $first, @classes) = @{$_->[1]};
-	      $value = xml_escape( $v->{ $first } ) if $v->{ $first };
+	      (my $first, %attributes) = @{$_->[1]};
+
+	      # First is a callback
+	      if (ref $first) {
+		$value = $first->( $c, $v );
+	      }
+	      elsif ($attributes{process}) {
+		$value = $attributes{process}->( $c, $v );
+	      }
+	      else {
+		$value = xml_escape( $v->{ $first } ) if $v->{ $first };
+	      };
 	    }
 
 	    # Callback
 	    else {
-	      ($value, @classes) = $_->[1]->( $c, $v );
+	      $value = $_->[1]->( $c, $v );
 	    };
 
-	    # Append classes information
-	    $x .= ' class="' . join(' ', @classes) . '"' if @classes;
+	    # Append attribute information
+	    while (my ($n, $v) = each %attributes) {
+	      $x .= qq{ $n="$v"} unless $n eq 'process';
+	    };
 	    $x .= '>';
 	    $x .= $value if $value;
 	  }
@@ -276,13 +298,14 @@ sub _filter_fields {
   my ($query, $valid, $min) = @_;
 
   # Nothing to filter
-  return $query unless ($valid && $min);
+  return $query if !$valid && !$min;
 
   # Create query hash
   my %query;
   foreach (ref $query ? $query : map { s/^\s*|\s$//g; $_ } split /\s*,\s*/, $query) {
     $query{$_} = 1;
   };
+
 
   # Valid array is given
   if ($valid) {

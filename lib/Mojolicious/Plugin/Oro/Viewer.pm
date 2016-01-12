@@ -472,7 +472,6 @@ Mojolicious::Plugin::Oro::Viewer - Show Oro tables in your Mojolicious apps
 
 =head1 DESCRIPTION
 
-
 Display L<DBIx::Oro> tables in your Mojolicious applications with support
 for sorting and paging.
 
@@ -560,11 +559,6 @@ L<Mojolicious>,
 L<DBIx::Oro>,
 L<Mojolicious::Plugin::TagHelpers::Pagination>,
 L<Mojolicious::Plugin::Oro>.
-
-B<Note:> Old versions of L<CHI> had a lot of dependencies.
-It was thus not recommended to use this plugin in a CGI
-environment. Since new versions of CHI use L<Moo> instead of
-L<Moose>, more use cases may be possible.
 
 
 =head1 AVAILABILITY

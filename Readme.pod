@@ -1,0 +1,188 @@
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+Mojolicious::Plugin::Oro::Viewer - Show Oro tables in your Mojolicious apps
+
+
+=head1 SYNOPSIS
+
+  # In Mojolicious::Lite startup
+  use Mojolicious::Lite;
+
+  plugin 'Oro' => {
+    default => {
+      file => ':memory:',
+      init => sub {
+        my $oro = shift;
+
+        $oro->do(<<NAME) or return -1;
+  CREATE TABLE User (
+    id    INTEGER PRIMARY KEY,
+    name  TEXT NOT NULL,
+    age   INTEGER
+  )
+  NAME
+
+        $oro->insert(
+	  User =>
+	    [qw/name age/] => (
+	    [qw/James 31/],
+	    [qw/John 32/],
+	    [qw/Robert 33/],
+	    [qw/Michael 34/]
+          )
+        );
+      }
+    }
+  };
+
+  plugin 'Oro::Viewer' => {
+    default => 10,
+    max_count => 15
+  };
+
+  %# In Templates
+  %= oro_view display => [Name => 'name', Alter => 'age'], table => 'User'
+
+  # <table class="oro-view">
+  #   <thead>
+  #     <tr>
+  #       <th class="oro-sortable oro-ascending">
+  #         <a href="?sortOrder=ascending&amp;sortBy=name">Name</a>
+  #       </th>
+  #       <th class="oro-sortable oro-ascending">
+  #         <a href="?sortOrder=ascending&amp;sortBy=age">Alter</a>
+  #       </th>
+  #     </tr>
+  #   </thead>
+  #   <tfoot>
+  #     <tr>
+  #       <td class="pagination" colspan="2">
+  #         <a rel="prev">&lt;</a>&nbsp;
+  #         <a rel="self">[1]</a>&nbsp;
+  #         <a rel="next">&gt;</a>
+  #       </td>
+  #     </tr>
+  #   </tfoot>
+  #   <tbody>
+  #     <tr><td>James</td><td>31</td></tr>
+  #     <tr><td>John</td><td>32</td></tr>
+  #     <tr><td>Michael</td><td>34</td></tr>
+  #     <tr><td>Robert</td><td>33</td></tr>
+  #   </tbody>
+  # </table>
+
+
+=head1 DESCRIPTION
+
+
+Display L<DBIx::Oro> tables in your Mojolicious applications with support
+for sorting and paging.
+
+B<This is early software, please use it with care!>
+B<Things may change or this module may be deprecated until it is on CPAN!>
+
+=head1 METHODS
+
+=head2 register
+
+  # Mojolicious
+  $app->plugin('Oro::Viewer' => {
+    max_count => 200,
+    default_count => 10
+  });
+
+Called when registering the plugin.
+Supports the parameters C<max_count> for maximum visible entries
+per page (defaults to C<100>) and C<default_count>, for default
+visible entries per page (defaults to C<25>).
+
+All parameters can be set as part of the configuration
+file with the key C<Oro-Viewer> or on registration
+(that can be overwritten by configuration).
+
+
+=head1 HELPERS
+
+=head2 oro_view
+
+  my $view = $c->oro_view(
+    oro_handle => 'default',
+    table => 'User',
+    query => {
+    },
+    display => [
+      Firstname => 'name',
+      Age => ['age', 'oro-number'],
+      Action => sub {
+        my ($c, $row) = @_;
+        return ('<a href="/delete/' . $row->{id} . '">' . $row->{id} . '</a>', 'oro-action');
+      }
+    ]
+  );
+
+  # In Template
+  % my $result = DBIx::Oro->new('file.sqlite')->list('User' => $self->req->params);
+  %= oro_view result => $result, display => [Name => 'name', Age => 'age']
+
+Render a html table with results of an L<DBIx::Oro> table.
+Accepts various parameters:
+
+=over 2
+
+=item C<cache> can support caches as defined in L<DBIx::Oro/select>.
+
+=item C<default_count> can overwrite the plugin parameter C<default_count>.
+
+=item C<default_fields> preselects a set of fields, that can be overwritten by the query parameter.
+
+=item C<fields> can give an array for fields, making query fields being ignored.
+
+=item C<max_count> can overwrite the plugin parameter C<max_count>.
+
+=item C<min_fields> can give an array of field names that are necessary, although they are not queried.
+
+
+
+=item C<oro_handle>, defaults to C<default>,
+
+=item C<query> accepts a hash of query parameters for L<DBIx::Oro/list>, defaults to C<$c->req->params>.
+
+=item C<result> accepts a L<DBIx::Oro/list> formatted result array.
+
+=item C<startIndex> is not supported - in favor of C<startPage>.
+
+=item C<valid_fields> can give an array of field names that are valid for querying.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+L<Mojolicious>,
+L<DBIx::Oro>,
+L<Mojolicious::Plugin::TagHelpers::Pagination>,
+L<Mojolicious::Plugin::Oro>.
+
+B<Note:> Old versions of L<CHI> had a lot of dependencies.
+It was thus not recommended to use this plugin in a CGI
+environment. Since new versions of CHI use L<Moo> instead of
+L<Moose>, more use cases may be possible.
+
+
+=head1 AVAILABILITY
+
+  https://github.com/Akron/Mojolicious-Plugin-Oro-Viewer
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2015-2016, L<Nils Diewald|http://nils-diewald.de/>.
+
+This program is free software, you can redistribute it
+and/or modify it under the terms of the Artistic License version 2.0.
+
+=cut

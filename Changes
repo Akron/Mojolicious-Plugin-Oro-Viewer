@@ -1,0 +1,5 @@
+0.03 2016-01-12
+        - First release on GitHub.
+
+0.02 2015-06-09
+        - Introduced hash mechanism for table cells (preferred).

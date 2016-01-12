@@ -1,0 +1,6 @@
+t/viewer.t
+t/synopsis.t
+lib/Mojolicious/Plugin/Oro/Viewer.pm
+Changes
+MANIFEST
+Makefile.PL

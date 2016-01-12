@@ -3,7 +3,9 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::ByteStream 'b';
 use Mojo::Util qw/xml_escape/;
 
-our $VERSION = 0.01;
+our $VERSION = '0.03';
+
+# Todo: Support fields that are not columns (but may be colored)
 
 # Support Javascript by providing javascript code that takes
 # the pagination and uses it as a template for further pagination
@@ -47,7 +49,7 @@ sub register {
 
       my %param = @_ % 2 ? %{ shift() } : @_;
 
-      # Get result (as from DBIx::Oro::list
+      # Get result (as from DBIx::Oro::list)
       my $result = $param{result};
 
       unless ($result) {
@@ -63,13 +65,14 @@ sub register {
 	delete $query->{startIndex};
 
 	# Get count value and check if it is valid
+	# No count set
 	unless ($query->{count}) {
 
 	  # Set to default
 	  $query->{count} = $param{default_count} // $param->{default_count}
 	}
 
-	# requested count exceeds maximum count
+	# Requested count exceeds maximum count
 	elsif ($query->{count} > ($param{max_count} // $param->{max_count})) {
 
 	  # Has to be maximum
@@ -123,12 +126,13 @@ sub register {
       my $pages = int($result->{totalResults} / $result->{itemsPerPage}) +
 	(($result->{totalResults} % $result->{itemsPerPage}) == 0 ? 0 : 1);
 
-
       # Get sortBy value
       my $sort_by = $result->{sortBy};
 
       # Init table
-      my $x = '<table class="oro-view">' . "\n  <thead>\n    <tr>";
+      my $table = '<table class="oro-view">' . "\n";
+      $table .= "  <thead>\n";
+      $table .= '<tr>';
 
       # Get fields from result
       my (%result_fields, $rf);
@@ -139,7 +143,7 @@ sub register {
 
       # Reorganize display
       my @order;
-      for (my $i = 0; $i < scalar @$display; $i+=2) {
+      for (my $i = 0; $i < scalar @$display; $i += 2) {
 
 	# Filter fields that are not selected
 	if ($rf) {
@@ -158,7 +162,7 @@ sub register {
 
       # Create table head
       foreach (@order) {
-	$x .= '<th';
+	my @column_classes;
 
 	# Field name
 	my $field;
@@ -168,11 +172,30 @@ sub register {
 	  $field = $_->[1];
 	}
 
+	# Hash field value
+	elsif (ref $_->[1] eq 'HASH') {
+	  if (my $col = $_->[1]->{col}) {
+
+	    # Col is a string
+	    unless (ref $col) {
+	      $field = $col;
+	    }
+
+	    # Col is an array reference
+	    else {
+	      $field = $col->[0];
+	      push @column_classes, @{$col}[1..$#{$col}];
+	    };
+	  };
+	}
+
 	# Array field value
 	elsif (ref $_->[1] eq 'ARRAY' && !ref $_->[1][0]) {
 	  $field = $_->[1][0];
 	};
 
+	# There is a field defined - it's sortable!
+	my $th = '';
 	if ($field) {
 
 	  # Preset sorting field for URL
@@ -180,90 +203,111 @@ sub register {
 
 	  # Preset fields for URL
 	  $hash{fields} = $rf if $rf;
-	  $x .= ' class="oro-sortable';
+	  push @column_classes, 'oro-sortable';
 
 	  # Check for sorting
 	  if ($result->{sortBy} && ($result->{sortBy} eq $field)) {
 
 	    # Is the active column
-	    $x .= ' oro-active';
+	    push @column_classes, 'oro-active';
 
 	    # Check sort order
 	    if (!$result->{sortOrder} || $result->{sortOrder} eq 'ascending') {
-	      $x .= ' oro-' . ($hash{sortOrder} = 'descending');
+	      push @column_classes, 'oro-' . ($hash{sortOrder} = 'descending');
 	    }
 
 	    # Default to ascending sort order
 	    else {
-	      $x .= ' oro-' . ($hash{sortOrder} = 'ascending');
+	      push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
 	    };
 	  }
 
 	  # No sorting given - default to ascending
 	  else {
-	    $x .= ' oro-' . ($hash{sortOrder} = 'ascending');
+	    push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
 	  };
 
 	  # Create links
-	  $x .= '"><a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
-	        $_->[0] . '</a></th>';
+	  $th = '<a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
+	    $_->[0] . '</a>';
 	}
-
-	# No sorting allowed for this topic
 	else {
-	  $x .= '>' . $_->[0] . '</th>';
+	  $th = $_->[0];
 	};
-      };
-      $x .= "</tr>\n  </thead>\n";
 
+	$table .= '<th';
+	$table .= ' class="' . join(' ', @column_classes) . '"' if @column_classes;
+	$table .= '>' . $th . '</th>';
+      };
+
+      $table .= "</tr>\n";
+      $table .= "  </thead>\n";
 
       # Create table footer with pagination
-      $x .= "  <tfoot>\n";
-      $x .= '    <tr><td class="pagination" colspan="' . scalar @order . '">';
+      $table .= "  <tfoot>\n";
+      $table .= '    <tr><td class="pagination" colspan="' . scalar @order . '">';
 
       # Add pagination
-      $x .= $c->pagination(
+      $table .= $c->pagination(
 	$result->{startPage},
 	$pages,
 	$c->url_with->query([startPage => '{page}'])
       );
-      $x .= "</td></tr>\n  </tfoot>\n";
+      $table .= "</td></tr>\n";
+      $table .= "  </tfoot>\n";
 
 
       # Create table border
-      $x .= "  <tbody>\n";
+      $table .= "  <tbody>\n";
 
       # Iterate over all result entries
       foreach my $v (@{$result->{entry}}) {
-	$x .= '    <tr>';
 
+	my @row_classes = ();
+
+	my $cells;
 	# Iterate over all displayable columns
 	foreach (@order) {
-	  $x .= '<td';
 
-	  # Field name is simple
-	  unless (ref $_->[1]) {
-	    $x .= '>';
-	    $x .= xml_escape( $v->{ $_->[1] } ) if $v->{ $_->[1] };
-	  }
+	  my @cell_classes = ();
+	  my $value;
 
 	  # Field name complex
-	  else {
-	    my ($value, %attributes);
+	  if (ref $_->[1]) {
 
 	    # Array reference
 	    if (ref $_->[1] eq 'ARRAY') {
-	      (my $first, %attributes) = @{$_->[1]};
+	      my ($first, %attributes) = @{$_->[1]};# @{$_->[1]};
 
-	      # First is a callback
+	      # First is a callback - treat as cell
 	      if (ref $first) {
 		$value = $first->( $c, $v );
 	      }
+
+	      # Deprecated
 	      elsif ($attributes{process}) {
 		$value = $attributes{process}->( $c, $v );
 	      }
+
+	      # First is cell content
 	      else {
 		$value = xml_escape( $v->{ $first } ) if $v->{ $first };
+	      };
+
+	      # Deprecated
+	      if ($attributes{class}) {
+		push @cell_classes, $attributes{class};
+	      };
+	    }
+
+	    elsif (ref $_->[1] eq 'HASH') {
+	      my $hash = $_->[1];
+	      if ($hash->{cell}) {
+		($value, @cell_classes) = $hash->{cell}->( $c, $v );
+	      };
+
+	      if ($hash->{row}) {
+		push @row_classes, $hash->{row}->( $c, $v );
 	      };
 	    }
 
@@ -273,21 +317,33 @@ sub register {
 	    };
 
 	    # Append attribute information
-	    while (my ($n, $v) = each %attributes) {
-	      $x .= qq{ $n="$v"} unless $n eq 'process';
-	    };
-	    $x .= '>';
-	    $x .= $value if $value;
+#	    while (my ($n, $v) = each %attributes) {
+#	      $cells .= qq{ $n="$v"} if $v && $n ne 'process';
+#	    };
 	  }
 
-	  $x .= '</td>';
+	  # Field name is simple
+	  else {
+	    $value .= xml_escape( $v->{ $_->[1] } ) if $v->{ $_->[1] };
+	  }
+
+	  $cells .= '<td';
+	  @cell_classes = grep { $_ } @cell_classes;
+	  $cells .= ' class="' . join(' ', @cell_classes) . '"' if @cell_classes;
+	  $cells .= '>';
+	  $cells .= $value if $value;
+	  $cells .= '</td>';
 	};
-	$x .= "</tr>\n";
+
+	$table .= '<tr';
+	@row_classes = grep { $_ } @row_classes;
+	$table .= ' class="' . join(' ', @row_classes) . '"' if @row_classes;
+	$table .= '>' . $cells . "</tr>\n";
       };
-      $x .= "  </tbody>\n";
+      $table .= "  </tbody>\n";
 
       # Return generated value
-      return b($x . "</table>\n");
+      return b($table . "</table>\n");
     }
   );
 };
@@ -338,21 +394,110 @@ __END__
 
 =pod
 
+=encoding utf8
+
 =head1 NAME
 
 Mojolicious::Plugin::Oro::Viewer - Show Oro tables in your Mojolicious apps
 
 
+=head1 SYNOPSIS
+
+  # In Mojolicious::Lite startup
+  use Mojolicious::Lite;
+
+  plugin 'Oro' => {
+    default => {
+      file => ':memory:',
+      init => sub {
+        my $oro = shift;
+
+        $oro->do(<<NAME) or return -1;
+  CREATE TABLE User (
+    id    INTEGER PRIMARY KEY,
+    name  TEXT NOT NULL,
+    age   INTEGER
+  )
+  NAME
+
+        $oro->insert(
+	  User =>
+	    [qw/name age/] => (
+	    [qw/James 31/],
+	    [qw/John 32/],
+	    [qw/Robert 33/],
+	    [qw/Michael 34/]
+          )
+        );
+      }
+    }
+  };
+
+  plugin 'Oro::Viewer' => {
+    default => 10,
+    max_count => 15
+  };
+
+  %# In Templates
+  %= oro_view display => [Name => 'name', Alter => 'age'], table => 'User'
+
+  # <table class="oro-view">
+  #   <thead>
+  #     <tr>
+  #       <th class="oro-sortable oro-ascending">
+  #         <a href="?sortOrder=ascending&amp;sortBy=name">Name</a>
+  #       </th>
+  #       <th class="oro-sortable oro-ascending">
+  #         <a href="?sortOrder=ascending&amp;sortBy=age">Alter</a>
+  #       </th>
+  #     </tr>
+  #   </thead>
+  #   <tfoot>
+  #     <tr>
+  #       <td class="pagination" colspan="2">
+  #         <a rel="prev">&lt;</a>&nbsp;
+  #         <a rel="self">[1]</a>&nbsp;
+  #         <a rel="next">&gt;</a>
+  #       </td>
+  #     </tr>
+  #   </tfoot>
+  #   <tbody>
+  #     <tr><td>James</td><td>31</td></tr>
+  #     <tr><td>John</td><td>32</td></tr>
+  #     <tr><td>Michael</td><td>34</td></tr>
+  #     <tr><td>Robert</td><td>33</td></tr>
+  #   </tbody>
+  # </table>
+
+
+=head1 DESCRIPTION
+
+
+Display L<DBIx::Oro> tables in your Mojolicious applications with support
+for sorting and paging.
+
+B<This is early software, please use it with care!>
+B<Things may change or this module may be deprecated until it is on CPAN!>
+
 =head1 METHODS
 
 =head2 register
 
-Supports also configurations at C<Oro::Viewer>.
+  # Mojolicious
+  $app->plugin('Oro::Viewer' => {
+    max_count => 200,
+    default_count => 10
+  });
 
-Supports C<max_count>, defaults to C<100> and C<default_count>, defaults to C<25>.
+Called when registering the plugin.
+Supports the parameters C<max_count> for maximum visible entries
+per page (defaults to C<100>) and C<default_count>, for default
+visible entries per page (defaults to C<25>).
 
+All parameters can be set as part of the configuration
+file with the key C<Oro-Viewer> or on registration
+(that can be overwritten by configuration).
 
-=head1 DESCRIPTION
 
 =head1 HELPERS
 
@@ -377,16 +522,61 @@ Supports C<max_count>, defaults to C<100> and C<default_count>, defaults to C<25
   % my $result = DBIx::Oro->new('file.sqlite')->list('User' => $self->req->params);
   %= oro_view result => $result, display => [Name => 'name', Age => 'age']
 
+Render a html table with results of an L<DBIx::Oro> table.
+Accepts various parameters:
 
-C<oro_handle>, defaults to C<default>,
-C<query> defaults to C<$c->req->params>.
-C<startIndex> is not supported - in favor of C<startPage>.
-C<default_count> can overwrite the plugin parameter C<default_count>.
-C<max_count> can overwrite the plugin parameter C<max_count>.
-C<default_fields> preselects a set of fields, that can be overwritten by the query parameter.
-C<valid_fields> can give an array of field names that are valid for querying.
-C<min_fields> can give an array of field names that are necessary, although they are not queried.
-C<fields> can give an array for fields, making query fields being ignored.
-C<cache> can support caches as defined in DBIx::Oro/select.
+=over 2
 
-=end
+=item C<cache> can support caches as defined in L<DBIx::Oro/select>.
+
+=item C<default_count> can overwrite the plugin parameter C<default_count>.
+
+=item C<default_fields> preselects a set of fields, that can be overwritten by the query parameter.
+
+=item C<fields> can give an array for fields, making query fields being ignored.
+
+=item C<max_count> can overwrite the plugin parameter C<max_count>.
+
+=item C<min_fields> can give an array of field names that are necessary, although they are not queried.
+
+
+
+=item C<oro_handle>, defaults to C<default>,
+
+=item C<query> accepts a hash of query parameters for L<DBIx::Oro/list>, defaults to C<$c->req->params>.
+
+=item C<result> accepts a L<DBIx::Oro/list> formatted result array.
+
+=item C<startIndex> is not supported - in favor of C<startPage>.
+
+=item C<valid_fields> can give an array of field names that are valid for querying.
+
+=back
+
+
+=head1 DEPENDENCIES
+
+L<Mojolicious>,
+L<DBIx::Oro>,
+L<Mojolicious::Plugin::TagHelpers::Pagination>,
+L<Mojolicious::Plugin::Oro>.
+
+B<Note:> Old versions of L<CHI> had a lot of dependencies.
+It was thus not recommended to use this plugin in a CGI
+environment. Since new versions of CHI use L<Moo> instead of
+L<Moose>, more use cases may be possible.
+
+
+=head1 AVAILABILITY
+
+  https://github.com/Akron/Mojolicious-Plugin-Oro-Viewer
+
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright (C) 2015-2016, L<Nils Diewald|http://nils-diewald.de/>.
+
+This program is free software, you can redistribute it
+and/or modify it under the terms of the Artistic License version 2.0.
+
+=cut

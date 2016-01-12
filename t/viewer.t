@@ -4,7 +4,7 @@ use Test::More;
 use Mojolicious::Lite;
 use Mojo::DOM;
 
-use lib '../lib';
+use lib '../lib', 'lib';
 
 plugin Oro => {
   default => {
@@ -58,10 +58,10 @@ BOOK
 	  )
 	) or return -1;
       $oro->insert(Name => {
-      sex => 'female',
-      prename => 'Barbara',
-      surname => 'White'
-    }) or return -1;
+	sex => 'female',
+	prename => 'Barbara',
+	surname => 'White'
+      }) or return -1;
     $oro->txn(
       sub {
 	my $oro = shift;
@@ -141,9 +141,11 @@ like($view, qr!<th class="oro-sortable oro-active oro-descending">!, 'Correct he
 $view = $app->oro_view(
   display => [
     'Name' => 'prename',
-    Surname => ['surname', process => sub {
-		  return '--' . $_[1]->{surname} . '--'
-		}]
+    Surname => [
+      'surname',
+      process => sub {
+	return '--' . $_[1]->{surname} . '--'
+      }]
   ],
   query => {
     sortBy => 'prename',
@@ -159,7 +161,12 @@ like($view, qr!<th class="oro-sortable oro-active oro-descending">!, 'Correct he
 $view = $app->oro_view(
   display => [
     'Name' => ['prename', class => 'test1'],
-    Surname => ['surname', process => sub { return ('--' . $_[1]->{surname} . '--') }, class => 'test2']
+    Surname => [
+      'surname',
+      process => sub {
+	return ('--' . $_[1]->{surname} . '--')
+      },
+      class => 'test2']
   ],
   query => {
     sortBy => 'prename',
@@ -170,9 +177,9 @@ $view = $app->oro_view(
 );
 
 like($view, qr!<tr><td class="test1">William</td><td class="test2">--Williams--</td></tr>!, 'Correct cells');
+
 like($view, qr!<tr><td class="test1">Thomas</td><td class="test2">--Wright--</td></tr>!, 'Correct cells');
 like($view, qr!<th class="oro-sortable oro-active oro-ascending">!, 'Correct header');
-
 
 get '/' => sub {
   my $c = shift;
@@ -284,14 +291,30 @@ get '/sortcallback' => sub {
       %{ $c->req->params->to_hash }
     },
     display    => [
+
+      # Single value
       'Vorname'   => 'prename',
+
+      # Array
       'Nachname'  => ['surname', class => 'test3'],
 
+      # Array with process
       'Geschlecht' => ['sex', process => sub {
 	  return '--' . $_[1]->{sex} . '--';
 	}, class => 'sexclass'],
 
-      'Alter'     => ['age', class => 'ageclass'],
+      # Hash
+      'Alter'     => {
+	col => ['age', 'integer'],
+	row => sub {
+	  return pop->{sex} . 'rowclass';
+	},
+	cell => sub {
+	  return pop->{age}, 'ageclass';
+	}
+      },
+
+      # Callback
       'Action' => sub {
 	# Makes it possible to return json as well on request
 	my $c = shift;
@@ -415,6 +438,7 @@ $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPag
 
 
 $t->get_ok('/sortcallback?sortBy=surname&count=2&fields=prename,age,check,sex&startPage=2&filterBy=surname&filterOp=startsWith&filterValue=W')
+  ->text_is('thead tr th.integer a', 'Alter')
   ->text_is('tbody tr td', 'William')
   ->element_exists_not('tbody tr td.test3')
   ->text_is('tbody tr:nth-child(1) td', 'William')
@@ -423,20 +447,19 @@ $t->get_ok('/sortcallback?sortBy=surname&count=2&fields=prename,age,check,sex&st
   ->text_is('tbody tr:nth-child(2) td', 'David')
   ->text_is('tbody tr:nth-child(2) td.ageclass', 36)
   ->text_is('tbody tr:nth-child(1) td.sexclass', '--male--')
+  ->text_is('tbody tr.malerowclass:nth-child(2) td.ageclass', 36)
   ->element_exists_not('tbody tr:nth-child(3) td')
   ->text_is('tbody tr td a[href]', 'Delete')
   ->text_is('th.oro-sortable.oro-ascending a[href]', 'Vorname')
   ->text_is('th:nth-child(2) a', 'Geschlecht')
   ->text_is('th:nth-child(3) a', 'Alter')
   ->text_is('th:nth-child(4)', 'Action')
-  ->text_is('.pagination a:nth-last-child(2) span', 3);
+  ->text_is('.pagination a:nth-last-child(2) span', 3)
+;
+
 
 done_testing;
-
-
-
-
-
-
 __END__
+
+
 

@@ -21,6 +21,7 @@ WriteMakefile(
   META_MERGE   => {
     requires  => { perl => '5.010001' },
   },
+  LICENSE => 'artistic_2',
   MIN_PERL_VERSION => '5.010001',
   test => {TESTS => 't/*.t'}
 );

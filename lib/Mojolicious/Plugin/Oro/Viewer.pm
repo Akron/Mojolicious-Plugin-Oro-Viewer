@@ -473,7 +473,7 @@ Mojolicious::Plugin::Oro::Viewer - Show Oro tables in your Mojolicious apps
 =head1 DESCRIPTION
 
 Display L<DBIx::Oro> tables in your Mojolicious applications with support
-for sorting and paging.
+for sorting and paging - normally based on query parameters.
 
 B<This is early software, please use it with care!>
 B<Things may change or this module may be deprecated until it is on CPAN!>
@@ -526,32 +526,52 @@ Accepts various parameters:
 
 =over 2
 
-=item C<cache> can support caches as defined in L<DBIx::Oro/select>.
+=item C<cache>
 
-=item C<default_count> can overwrite the plugin parameter C<default_count>.
+Cache support as defined in L<DBIx::Oro/select>.
 
-=item C<default_fields> preselects a set of fields, that can be overwritten by the query parameter.
+=item C<default_count>
 
-=item C<fields> can give an array for fields, making query fields being ignored.
+Overwrite the plugin parameter C<default_count>.
 
-=item C<max_count> can overwrite the plugin parameter C<max_count>.
+=item C<default_fields>
 
-=item C<min_fields> can give an array of field names that are necessary, although they are not queried.
+Preselect a set of fields that can be overwritten by the query parameter.
 
+=item C<fields>
 
+An array of fields. In case this is defined, query fields are being ignored.
 
-=item C<oro_handle>, defaults to C<default>,
+=item C<max_count>
 
-=item C<query> accepts a hash of query parameters for L<DBIx::Oro/list>, defaults to C<$c->req->params>.
+Overwrite the plugin parameter C<max_count>.
 
-=item C<result> accepts a L<DBIx::Oro/list> formatted result array.
+=item C<min_fields>
 
-=item C<startIndex> is not supported - in favor of C<startPage>.
+Array of fields that are necessary, although they are not queried.
 
-=item C<valid_fields> can give an array of field names that are valid for querying.
+=item C<oro_handle>
+
+The L<DBIx::Oro> handle, defaults to C<default>
+
+=item C<query>
+
+A hash of query parameters for L<DBIx::Oro/list>, defaults to C<$c-E<gt>req-E<gt>params>.
+
+=item C<result>
+
+A L<DBIx::Oro/list> formatted result array.
+
+=item C<startIndex>
+
+I<startIndex is not supported - in favor of C<startPage>!>
+
+=item C<valid_fields>
+
+Give an array of field names that are valid for querying.
+Invalid fields are ignored.
 
 =back
-
 
 =head1 DEPENDENCIES
 

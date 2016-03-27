@@ -277,7 +277,7 @@ sub register {
 
 	    # Array reference
 	    if (ref $_->[1] eq 'ARRAY') {
-	      my ($first, %attributes) = @{$_->[1]};# @{$_->[1]};
+	      my ($first, %attributes) = @{$_->[1]};
 
 	      # First is a callback - treat as cell
 	      if (ref $first) {
@@ -538,6 +538,58 @@ Overwrite the plugin parameter C<default_count>.
 
 Preselect a set of fields that can be overwritten by the query parameter.
 
+=item C<display>
+
+  %= oro_view display => ['User-Name' => 'name', 'User-Age' => 'age'], table => 'User'
+
+Define the field display by passing an array reference with pairs of field names
+(to display in the head line of the table view) and field values.
+
+  %= oro_view display => ['User' => 'name']
+
+Field values can be passed as simple strings, refering to the name of the field column.
+
+  %= oro_view display => ['User' => sub { my ($c, $row) = @_; return $row->{id}; } ]
+
+Field values can be passed as a callback, returning the cell value.
+
+  %= oro_view display => ['User' => { col => 'handle'}]
+
+Field values can also be passed as hash references, with the following parameters.
+
+=over 4
+
+=item C<col>
+
+  col => 'handle'
+  col => [qw/handle handle-class/]
+
+The column to display.
+In case of an array reference, the first parameter is the field column name,
+following parameters will be added to the C<class> attribute
+of the table column.
+
+=item C<cell>
+
+  cell => sub {
+    my ($c, $row) = @_;
+    return $row->{id};
+  }
+
+The cell content to display, returned from a callback.
+Further values returned may be class names attached to the cell.
+
+=item C<row>
+
+  row => sub {
+    my ($c, $row) = @_;
+    return ($row->{id} % 2) ? 'odd' : 'even';
+  }
+
+Return class values attached to the row by a callback.
+
+=back
+
 =item C<fields>
 
 An array of fields. In case this is defined, query fields are being ignored.
@@ -561,10 +613,15 @@ A hash of query parameters for L<DBIx::Oro/list>, defaults to C<$c-E<gt>req-E<gt
 =item C<result>
 
 A L<DBIx::Oro/list> formatted result array.
+This will override all other query or filter related parameters.
 
 =item C<startIndex>
 
 I<startIndex is not supported - in favor of C<startPage>!>
+
+=item C<table>
+
+The L<DBIx::Oro> table to display.
 
 =item C<valid_fields>
 

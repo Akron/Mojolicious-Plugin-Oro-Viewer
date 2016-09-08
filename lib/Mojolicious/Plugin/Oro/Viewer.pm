@@ -6,6 +6,10 @@ use Mojo::Util qw/xml_escape/;
 our $VERSION = '0.03';
 
 # Todo: Support fields that are not columns (but may be colored)
+# Todo: Support filter_by_row (which filters by the value of a field,
+#       making all row values links)
+# Todo: Support filter_by_search (which introduces an input field
+#       for searching below the table header)
 
 # Support Javascript by providing javascript code that takes
 # the pagination and uses it as a template for further pagination

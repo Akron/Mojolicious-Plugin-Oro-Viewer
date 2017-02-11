@@ -57,68 +57,68 @@ sub register {
       my $result = $param{result};
 
       unless ($result) {
-	my $oro_handle = $param{oro_handle} // undef;
-	my $table = $param{table};
+        my $oro_handle = $param{oro_handle} // undef;
+        my $table = $param{table};
 
-	return '[No table selected]' unless $table;
+        return '[No table selected]' unless $table;
 
-	# Get query parameter
-	my $query = $param{query} // $c->req->params->to_hash;
+        # Get query parameter
+        my $query = $param{query} // $c->req->params->to_hash;
 
-	# startIndex is not supported
-	delete $query->{startIndex};
+        # startIndex is not supported
+        delete $query->{startIndex};
 
-	# Get count value and check if it is valid
-	# No count set
-	unless ($query->{count}) {
+        # Get count value and check if it is valid
+        # No count set
+        unless ($query->{count}) {
 
-	  # Set to default
-	  $query->{count} = $param{default_count} // $param->{default_count}
-	}
+          # Set to default
+          $query->{count} = $param{default_count} // $param->{default_count}
+        }
 
-	# Requested count exceeds maximum count
-	elsif ($query->{count} > ($param{max_count} // $param->{max_count})) {
+        # Requested count exceeds maximum count
+        elsif ($query->{count} > ($param{max_count} // $param->{max_count})) {
 
-	  # Has to be maximum
-	  $query->{count} = ($param{max_count} // $param->{max_count});
-	};
+          # Has to be maximum
+          $query->{count} = ($param{max_count} // $param->{max_count});
+        };
 
-	# Fields are predefined
-	if ($param{fields}) {
-	  $query->{fields} = $param{fields};
-	}
+        # Fields are predefined
+        if ($param{fields}) {
+          $query->{fields} = $param{fields};
+        }
 
-	# Use and check query fields
-	elsif ($query->{fields}) {
+        # Use and check query fields
+        elsif ($query->{fields}) {
 
-	  # Filter fields
-	  $query->{fields} = _filter_fields(
-	    $query->{fields},
-	    $param{valid_fields},
-	    $param{min_fields}
-	  );
-	}
+          # Filter fields
+          $query->{fields} = _filter_fields(
+            $query->{fields},
+            $param{valid_fields},
+            $param{min_fields}
+          );
+        }
 
-	# Fields are not defined
-	elsif ($param->{default_fields}) {
-	  $query->{fields} = $param->{default_fields};
-	};
+        # Fields are not defined
+        elsif ($param->{default_fields}) {
+          $query->{fields} = $param->{default_fields};
+        };
 
-	# Support cache
-	if ($param{cache}) {
-	  $query->{-cache} = $param{cache};
-	}
+        # Support cache
+        if ($param{cache}) {
+          $query->{-cache} = $param{cache};
+        }
 
-	# Do not support user cache support!
-	else {
-	  delete $query->{-cache};
-	};
+        # Do not support user cache support!
+        else {
+          delete $query->{-cache};
+        };
 
-	# Get table object
-	my $oro = $c->oro($oro_handle)->table($table);
+        # Get table object
+        my $oro = $c->oro($oro_handle)->table($table);
 
-	# Retrieve from database
-	$result = $oro->list($query);
+        # Retrieve from database
+        $result = $oro->list($query);
       };
 
       return '[Unable to list result]' unless $result;
@@ -128,7 +128,7 @@ sub register {
 
       # Calculate pages
       my $pages = int($result->{totalResults} / $result->{itemsPerPage}) +
-	(($result->{totalResults} % $result->{itemsPerPage}) == 0 ? 0 : 1);
+        (($result->{totalResults} % $result->{itemsPerPage}) == 0 ? 0 : 1);
 
       # Get sortBy value
       my $sort_by = $result->{sortBy};
@@ -141,107 +141,107 @@ sub register {
       # Get fields from result
       my (%result_fields, $rf);
       if ($result->{fields}) {
-	$result_fields{$_} = 1 foreach @{$result->{fields}};
-	$rf = join(',', keys %result_fields);
+        $result_fields{$_} = 1 foreach @{$result->{fields}};
+        $rf = join(',', keys %result_fields);
       };
 
       # Reorganize display
       my @order;
       for (my $i = 0; $i < scalar @$display; $i += 2) {
 
-	# Filter fields that are not selected
-	if ($rf) {
-	  my $f = $display->[$i+1];
+        # Filter fields that are not selected
+        if ($rf) {
+          my $f = $display->[$i+1];
 
-	  # These fields are not needed
-	  if (!ref $f || (ref $f eq 'ARRAY' && !ref $f->[0])) {
-	    $f = $f->[0] if ref $f;
+          # These fields are not needed
+          if (!ref $f || (ref $f eq 'ARRAY' && !ref $f->[0])) {
+            $f = $f->[0] if ref $f;
 
-	    next unless exists $result_fields{$f};
-	  };
-	};
+            next unless exists $result_fields{$f};
+          };
+        };
 
-	push(@order, [$display->[$i] => $display->[$i+1]]);
+        push(@order, [$display->[$i] => $display->[$i+1]]);
       };
 
       # Create table head
       foreach (@order) {
-	my @column_classes;
+        my @column_classes;
 
-	# Field name
-	my $field;
+        # Field name
+        my $field;
 
-	# Simple field value
-	if (!ref $_->[1]) {
-	  $field = $_->[1];
-	}
+        # Simple field value
+        if (!ref $_->[1]) {
+          $field = $_->[1];
+        }
 
-	# Hash field value
-	elsif (ref $_->[1] eq 'HASH') {
-	  if (my $col = $_->[1]->{col}) {
+        # Hash field value
+        elsif (ref $_->[1] eq 'HASH') {
+          if (my $col = $_->[1]->{col}) {
 
-	    # Col is a string
-	    unless (ref $col) {
-	      $field = $col;
-	    }
+            # Col is a string
+            unless (ref $col) {
+              $field = $col;
+            }
 
-	    # Col is an array reference
-	    else {
-	      $field = $col->[0];
-	      push @column_classes, @{$col}[1..$#{$col}];
-	    };
-	  };
-	}
+            # Col is an array reference
+            else {
+              $field = $col->[0];
+              push @column_classes, @{$col}[1..$#{$col}];
+            };
+          };
+        }
 
-	# Array field value
-	elsif (ref $_->[1] eq 'ARRAY' && !ref $_->[1][0]) {
-	  $field = $_->[1][0];
-	};
+        # Array field value
+        elsif (ref $_->[1] eq 'ARRAY' && !ref $_->[1][0]) {
+          $field = $_->[1][0];
+        };
 
-	# There is a field defined - it's sortable!
-	my $th = '';
-	if ($field) {
+        # There is a field defined - it's sortable!
+        my $th = '';
+        if ($field) {
 
-	  # Preset sorting field for URL
-	  my %hash = ( sortBy => $field );
+          # Preset sorting field for URL
+          my %hash = ( sortBy => $field );
 
-	  # Preset fields for URL
-	  $hash{fields} = $rf if $rf;
-	  push @column_classes, 'oro-sortable';
+          # Preset fields for URL
+          $hash{fields} = $rf if $rf;
+          push @column_classes, 'oro-sortable';
 
-	  # Check for sorting
-	  if ($result->{sortBy} && ($result->{sortBy} eq $field)) {
+          # Check for sorting
+          if ($result->{sortBy} && ($result->{sortBy} eq $field)) {
 
-	    # Is the active column
-	    push @column_classes, 'oro-active';
+            # Is the active column
+            push @column_classes, 'oro-active';
 
-	    # Check sort order
-	    if (!$result->{sortOrder} || $result->{sortOrder} eq 'ascending') {
-	      push @column_classes, 'oro-' . ($hash{sortOrder} = 'descending');
-	    }
+            # Check sort order
+            if (!$result->{sortOrder} || $result->{sortOrder} eq 'ascending') {
+              push @column_classes, 'oro-' . ($hash{sortOrder} = 'descending');
+            }
 
-	    # Default to ascending sort order
-	    else {
-	      push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
-	    };
-	  }
+            # Default to ascending sort order
+            else {
+              push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
+            };
+          }
 
-	  # No sorting given - default to ascending
-	  else {
-	    push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
-	  };
+          # No sorting given - default to ascending
+          else {
+            push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
+          };
 
-	  # Create links
-	  $th = '<a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
-	    $_->[0] . '</a>';
-	}
-	else {
-	  $th = $_->[0];
-	};
+          # Create links
+          $th = '<a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
+            $_->[0] . '</a>';
+        }
+        else {
+          $th = $_->[0];
+        };
 
-	$table .= '<th';
-	$table .= ' class="' . join(' ', @column_classes) . '"' if @column_classes;
-	$table .= '>' . $th . '</th>';
+        $table .= '<th';
+        $table .= ' class="' . join(' ', @column_classes) . '"' if @column_classes;
+        $table .= '>' . $th . '</th>';
       };
 
       $table .= "</tr>\n";
@@ -253,9 +253,9 @@ sub register {
 
       # Add pagination
       $table .= $c->pagination(
-	$result->{startPage},
-	$pages,
-	$c->url_with->query([startPage => '{page}'])
+        $result->{startPage},
+        $pages,
+        $c->url_with->query([startPage => '{page}'])
       );
       $table .= "</td></tr>\n";
       $table .= "  </tfoot>\n";
@@ -267,82 +267,82 @@ sub register {
       # Iterate over all result entries
       foreach my $v (@{$result->{entry}}) {
 
-	my @row_classes = ();
+        my @row_classes = ();
 
-	my $cells;
-	# Iterate over all displayable columns
-	foreach (@order) {
+        my $cells;
+        # Iterate over all displayable columns
+        foreach (@order) {
 
-	  my @cell_classes = ();
-	  my $value;
+          my @cell_classes = ();
+          my $value;
 
-	  # Field name complex
-	  if (ref $_->[1]) {
+          # Field name complex
+          if (ref $_->[1]) {
 
-	    # Array reference
-	    if (ref $_->[1] eq 'ARRAY') {
-	      my ($first, %attributes) = @{$_->[1]};
+            # Array reference
+            if (ref $_->[1] eq 'ARRAY') {
+              my ($first, %attributes) = @{$_->[1]};
 
-	      # First is a callback - treat as cell
-	      if (ref $first) {
-		$value = $first->( $c, $v );
-	      }
+              # First is a callback - treat as cell
+              if (ref $first) {
+                $value = $first->( $c, $v );
+              }
 
-	      # Deprecated
-	      elsif ($attributes{process}) {
-		$value = $attributes{process}->( $c, $v );
-	      }
+              # Deprecated
+              elsif ($attributes{process}) {
+                $value = $attributes{process}->( $c, $v );
+              }
 
-	      # First is cell content
-	      else {
-		$value = xml_escape( $v->{ $first } ) if $v->{ $first };
-	      };
+              # First is cell content
+              else {
+                $value = xml_escape( $v->{ $first } ) if $v->{ $first };
+              };
 
-	      # Deprecated
-	      if ($attributes{class}) {
-		push @cell_classes, $attributes{class};
-	      };
-	    }
+              # Deprecated
+              if ($attributes{class}) {
+                push @cell_classes, $attributes{class};
+              };
+            }
 
-	    elsif (ref $_->[1] eq 'HASH') {
-	      my $hash = $_->[1];
-	      if ($hash->{cell}) {
-		($value, @cell_classes) = $hash->{cell}->( $c, $v );
-	      };
+            elsif (ref $_->[1] eq 'HASH') {
+              my $hash = $_->[1];
+              if ($hash->{cell}) {
+                ($value, @cell_classes) = $hash->{cell}->( $c, $v );
+              };
 
-	      if ($hash->{row}) {
-		push @row_classes, $hash->{row}->( $c, $v );
-	      };
-	    }
+              if ($hash->{row}) {
+                push @row_classes, $hash->{row}->( $c, $v );
+              };
+            }
 
-	    # Callback
-	    else {
-	      $value = $_->[1]->( $c, $v );
-	    };
+            # Callback
+            else {
+              $value = $_->[1]->( $c, $v );
+            };
 
-	    # Append attribute information
-#	    while (my ($n, $v) = each %attributes) {
-#	      $cells .= qq{ $n="$v"} if $v && $n ne 'process';
-#	    };
-	  }
+            # Append attribute information
+            #      while (my ($n, $v) = each %attributes) {
+            #        $cells .= qq{ $n="$v"} if $v && $n ne 'process';
+            #      };
+          }
 
-	  # Field name is simple
-	  else {
-	    $value .= xml_escape( $v->{ $_->[1] } ) if $v->{ $_->[1] };
-	  }
+          # Field name is simple
+          else {
+            $value .= xml_escape( $v->{ $_->[1] } ) if $v->{ $_->[1] };
+          }
 
-	  $cells .= '<td';
-	  @cell_classes = grep { $_ } @cell_classes;
-	  $cells .= ' class="' . join(' ', @cell_classes) . '"' if @cell_classes;
-	  $cells .= '>';
-	  $cells .= $value if $value;
-	  $cells .= '</td>';
-	};
+          $cells .= '<td';
+          @cell_classes = grep { $_ } @cell_classes;
+          $cells .= ' class="' . join(' ', @cell_classes) . '"' if @cell_classes;
+          $cells .= '>';
+          $cells .= $value if $value;
+          $cells .= '</td>';
+        };
 
-	$table .= '<tr';
-	@row_classes = grep { $_ } @row_classes;
-	$table .= ' class="' . join(' ', @row_classes) . '"' if @row_classes;
-	$table .= '>' . $cells . "</tr>\n";
+        $table .= '<tr';
+        @row_classes = grep { $_ } @row_classes;
+        $table .= ' class="' . join(' ', @row_classes) . '"' if @row_classes;
+        $table .= '>' . $cells . "</tr>\n";
       };
       $table .= "  </tbody>\n";
 
@@ -425,12 +425,12 @@ Mojolicious::Plugin::Oro::Viewer - Show Oro tables in your Mojolicious apps
   NAME
 
         $oro->insert(
-	  User =>
-	    [qw/name age/] => (
-	    [qw/James 31/],
-	    [qw/John 32/],
-	    [qw/Robert 33/],
-	    [qw/Michael 34/]
+    User =>
+      [qw/name age/] => (
+      [qw/James 31/],
+      [qw/John 32/],
+      [qw/Robert 33/],
+      [qw/Michael 34/]
           )
         );
       }

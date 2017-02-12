@@ -1,7 +1,7 @@
 package Mojolicious::Plugin::Oro::Viewer;
 use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::ByteStream 'b';
-use Mojo::Util qw/xml_escape/;
+use Mojo::Util qw/xml_escape quote/;
 
 our $VERSION = '0.03';
 
@@ -136,7 +136,19 @@ sub register {
       # Init table
       my $table = '<table class="oro-view">' . "\n";
       $table .= "  <thead>\n";
-      $table .= '<tr>';
+
+      # Add filter info
+      if ($result->{filterBy}) {
+        $table .= '    <tr><th cols="' . scalar(@$display) . '">';
+        $table .= quote($result->{filterBy});
+        $table .= ' ' . $result->{filterOp};
+        if ($result->{filterValue}) {
+          $table .= ' ' . quote($result->{filterValue});
+        };
+        $table .= "</th></tr>\n";
+      };
+
+      $table .= '    <tr>';
 
       # Get fields from result
       my (%result_fields, $rf);
@@ -231,6 +243,12 @@ sub register {
             push @column_classes, 'oro-' . ($hash{sortOrder} = 'ascending');
           };
 
+          if ($result->{filterBy}) {
+            $hash{filterBy} = $result->{filterBy};
+            $hash{filterOp} = $result->{filterOp} if $result->{filterOp};
+            $hash{filterValue} = $result->{filterValue} if $result->{filterValue};
+          };
+
           # Create links
           $th = '<a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
             $_->[0] . '</a>';
@@ -304,14 +322,34 @@ sub register {
               };
             }
 
+            # Cell value is given as a hash
             elsif (ref $_->[1] eq 'HASH') {
               my $hash = $_->[1];
               if ($hash->{cell}) {
                 ($value, @cell_classes) = $hash->{cell}->( $c, $v );
+              }
+
+              # Use column by default
+              else {
+                $value = $v->{ $hash->{col} };
               };
 
               if ($hash->{row}) {
                 push @row_classes, $hash->{row}->( $c, $v );
+              };
+
+              # Wrap in a filter
+              if ($hash->{filter}) {
+                $value = '<a href="' .
+                  $c->url_with->query([
+                    filterBy => $hash->{col},
+                    filterOp => 'equals',
+                    filterValue => $v->{ $hash->{col} },
+                    startPage => 1
+                  ]) .
+                  '">' .
+                  $value .
+                  '</a>';
               };
             }
 
@@ -573,6 +611,7 @@ In case of an array reference, the first parameter is the field column name,
 following parameters will be added to the C<class> attribute
 of the table column.
 
+
 =item C<cell>
 
   cell => sub {
@@ -582,6 +621,16 @@ of the table column.
 
 The cell content to display, returned from a callback.
 Further values returned may be class names attached to the cell.
+If the cell value is not given explicitely, the raw value from
+C<col> is returned.
+
+
+=item C<filter>
+
+  filter => 1
+
+If true, the field value is wrapped in a filtering link using col.
+
 
 =item C<row>
 

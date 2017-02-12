@@ -265,10 +265,10 @@ get '/secure' => sub {
       'Geschlecht' => ['sex', class => 'sexclass'],
       'Alter'     => ['age', class => 'ageclass'],
       'Action' => sub {
-	# Makes it possible to return json as well on request
-	my $c = shift;
-	my $row = shift;
-	return '<a href="/delete/?user=' . $row->{id} . '">Delete</a>'
+        # Makes it possible to return json as well on request
+        my $c = shift;
+        my $row = shift;
+        return '<a href="/delete/?user=' . $row->{id} . '">Delete</a>'
       }
     ]
   );
@@ -300,26 +300,26 @@ get '/sortcallback' => sub {
 
       # Array with process
       'Geschlecht' => ['sex', process => sub {
-	  return '--' . $_[1]->{sex} . '--';
-	}, class => 'sexclass'],
+                         return '--' . $_[1]->{sex} . '--';
+                       }, class => 'sexclass'],
 
       # Hash
       'Alter'     => {
-	col => ['age', 'integer'],
-	row => sub {
-	  return pop->{sex} . 'rowclass';
-	},
-	cell => sub {
-	  return pop->{age}, 'ageclass';
-	}
+        col => ['age', 'integer'],
+        row => sub {
+          return pop->{sex} . 'rowclass';
+        },
+        cell => sub {
+          return pop->{age}, 'ageclass';
+        }
       },
 
       # Callback
       'Action' => sub {
-	# Makes it possible to return json as well on request
-	my $c = shift;
-	my $row = shift;
-	return '<a href="/delete/?user=' . $row->{id} . '">Delete</a>'
+        # Makes it possible to return json as well on request
+        my $c = shift;
+        my $row = shift;
+        return '<a href="/delete/?user=' . $row->{id} . '">Delete</a>'
       }
     ]
   );

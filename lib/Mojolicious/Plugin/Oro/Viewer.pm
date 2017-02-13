@@ -46,6 +46,29 @@ sub register {
     $mojo->plugin('TagHelpers::Pagination');
   };
 
+  # Establish 'oro_filter_by' helper
+  $mojo->helper(
+    oro_filter_by => sub {
+      my $c = shift;
+
+      my $view = shift if @_ == 3;
+      my ($key, $value) = @_;
+
+      return '' unless $value;
+
+      return $c->link_to(
+        $view // $value,
+        $c->url_with->query([
+          startPage   => 1,
+          filterBy    => $key,
+          filterOp    => 'equals',
+          filterValue => $value
+        ])
+      );
+    }
+  );
+
+
   # Establish 'oro_view' helper
   $mojo->helper(
     oro_view => sub {
@@ -352,17 +375,12 @@ sub register {
               };
 
               # Wrap in a filter
-              if ($hash->{filter} && $value) {
-                $value = '<a href="' .
-                  $c->url_with->query([
-                    filterBy => $hash->{col},
-                    filterOp => 'equals',
-                    filterValue => $v->{ $hash->{col} },
-                    startPage => 1
-                  ]) .
-                  '">' .
-                  $value .
-                  '</a>';
+              if ($hash->{filter}) {
+
+                # Embed filter link
+                $value = $c->oro_filter_by(
+                  $value => ($hash->{col}, $v->{ $hash->{col} })
+                );
               };
             }
 

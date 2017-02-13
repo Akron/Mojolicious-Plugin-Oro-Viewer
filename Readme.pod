@@ -27,12 +27,12 @@ Mojolicious::Plugin::Oro::Viewer - Show Oro tables in your Mojolicious apps
   NAME
 
         $oro->insert(
-	  User =>
-	    [qw/name age/] => (
-	    [qw/James 31/],
-	    [qw/John 32/],
-	    [qw/Robert 33/],
-	    [qw/Michael 34/]
+    User =>
+      [qw/name age/] => (
+      [qw/James 31/],
+      [qw/John 32/],
+      [qw/Robert 33/],
+      [qw/Michael 34/]
           )
         );
       }
@@ -175,6 +175,7 @@ In case of an array reference, the first parameter is the field column name,
 following parameters will be added to the C<class> attribute
 of the table column.
 
+
 =item C<cell>
 
   cell => sub {
@@ -184,6 +185,16 @@ of the table column.
 
 The cell content to display, returned from a callback.
 Further values returned may be class names attached to the cell.
+If the cell value is not given explicitely, the raw value from
+C<col> is returned.
+
+
+=item C<filter>
+
+  filter => 1
+
+If true, the field value is wrapped in a filtering link using col.
+
 
 =item C<row>
 
@@ -251,7 +262,7 @@ L<Mojolicious::Plugin::Oro>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2015-2016, L<Nils Diewald|http://nils-diewald.de/>.
+Copyright (C) 2015-2017, L<Nils Diewald|http://nils-diewald.de/>.
 
 This program is free software, you can redistribute it
 and/or modify it under the terms of the Artistic License version 2.0.

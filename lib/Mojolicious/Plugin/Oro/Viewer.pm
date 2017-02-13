@@ -3,7 +3,7 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::ByteStream 'b';
 use Mojo::Util qw/xml_escape quote/;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 # Todo: Support fields that are not columns (but may be colored)
 # Todo: Support filter_by_row (which filters by the value of a field,
@@ -166,11 +166,17 @@ sub register {
       # Add filter info
       if ($result->{filterBy}) {
         $table .= '    <tr class="oro-filter"><th colspan="' . scalar @order . '">';
-        $table .= quote($result->{filterBy});
-        $table .= ' ' . $result->{filterOp};
+
+        # Add filter description
+        my $str = quote($result->{filterBy});
+        $str .= ' ' . $result->{filterOp};
         if ($result->{filterValue}) {
-          $table .= ' ' . quote($result->{filterValue});
+          $str .= ' ' . quote($result->{filterValue});
         };
+
+        # Escape filter description
+        $table .= xml_escape($str);
+
         my $query = $c->url_with;
 
         # Remove filter parameters
@@ -346,7 +352,7 @@ sub register {
               };
 
               # Wrap in a filter
-              if ($hash->{filter}) {
+              if ($hash->{filter} && $value) {
                 $value = '<a href="' .
                   $c->url_with->query([
                     filterBy => $hash->{col},
@@ -705,7 +711,7 @@ L<Mojolicious::Plugin::Oro>.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (C) 2015-2016, L<Nils Diewald|http://nils-diewald.de/>.
+Copyright (C) 2015-2017, L<Nils Diewald|http://nils-diewald.de/>.
 
 This program is free software, you can redistribute it
 and/or modify it under the terms of the Artistic License version 2.0.

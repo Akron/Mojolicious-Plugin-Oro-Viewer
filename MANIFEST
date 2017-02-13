@@ -1,4 +1,5 @@
 t/viewer.t
+t/viewer-filter.t
 t/synopsis.t
 lib/Mojolicious/Plugin/Oro/Viewer.pm
 Changes

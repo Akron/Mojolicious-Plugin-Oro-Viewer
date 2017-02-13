@@ -137,19 +137,6 @@ sub register {
       my $table = '<table class="oro-view">' . "\n";
       $table .= "  <thead>\n";
 
-      # Add filter info
-      if ($result->{filterBy}) {
-        $table .= '    <tr><th cols="' . scalar(@$display) . '">';
-        $table .= quote($result->{filterBy});
-        $table .= ' ' . $result->{filterOp};
-        if ($result->{filterValue}) {
-          $table .= ' ' . quote($result->{filterValue});
-        };
-        $table .= "</th></tr>\n";
-      };
-
-      $table .= '    <tr>';
-
       # Get fields from result
       my (%result_fields, $rf);
       if ($result->{fields}) {
@@ -175,6 +162,26 @@ sub register {
 
         push(@order, [$display->[$i] => $display->[$i+1]]);
       };
+
+      # Add filter info
+      if ($result->{filterBy}) {
+        $table .= '    <tr class="oro-filter"><th colspan="' . scalar @order . '">';
+        $table .= quote($result->{filterBy});
+        $table .= ' ' . $result->{filterOp};
+        if ($result->{filterValue}) {
+          $table .= ' ' . quote($result->{filterValue});
+        };
+        my $query = $c->url_with;
+
+        # Remove filter parameters
+        $query->query->remove('filterBy')->remove('filterOp')->remove('filterValue');
+
+        # Add remove link
+        $table .= ' ' . $c->link_to(b('<span>x</span>'), $query, class => 'remove-filter');
+        $table .= "</th></tr>\n";
+      };
+
+      $table .= '    <tr>';
 
       # Create table head
       foreach (@order) {

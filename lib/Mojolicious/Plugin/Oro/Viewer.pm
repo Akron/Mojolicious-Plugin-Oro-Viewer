@@ -40,6 +40,7 @@ sub register {
   # Default values
   $param->{max_count}     //= 100;
   $param->{default_count} //= 25;
+  $param->{del_marker}    //= 'x';
 
   # Load pagination plugin
   unless ($mojo->renderer->helpers->{'pagination'}) {
@@ -68,6 +69,21 @@ sub register {
     }
   );
 
+
+  # Line with filter information
+  $mojo->helper(
+    oro_filter_line => sub {
+      my ($c, $del_marker) = @_;
+      $del_marker //= $param->{del_marker};
+      my $query = $c->url_with;
+
+      # Remove filter parameters
+      $query->query->remove('filterBy')->remove('filterOp')->remove('filterValue');
+
+      # Add remove link
+      $c->link_to(b('<span>' . $del_marker . '</span>'), $query, class => 'remove-filter');
+    }
+  );
 
   # Establish 'oro_view' helper
   $mojo->helper(
@@ -199,14 +215,7 @@ sub register {
 
         # Escape filter description
         $table .= xml_escape($str);
-
-        my $query = $c->url_with;
-
-        # Remove filter parameters
-        $query->query->remove('filterBy')->remove('filterOp')->remove('filterValue');
-
-        # Add remove link
-        $table .= ' ' . $c->link_to(b('<span>x</span>'), $query, class => 'remove-filter');
+        $table .= ' ' . $c->oro_filter_line($param{del_marker});
         $table .= "</th></tr>\n";
       };
 

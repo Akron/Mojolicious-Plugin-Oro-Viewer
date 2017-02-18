@@ -1,5 +1,6 @@
-0.04 2017-02-13
+0.04 2017-02-18
         - Introduced filter.
+        - Added oro_filter_by and oro_filter_line helpers.
 
 0.03 2016-01-12
         - First release on GitHub.

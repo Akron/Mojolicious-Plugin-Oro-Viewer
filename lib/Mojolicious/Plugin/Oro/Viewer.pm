@@ -75,13 +75,24 @@ sub register {
     oro_filter_line => sub {
       my ($c, $del_marker) = @_;
       $del_marker //= $param->{del_marker};
+
+      # Add filter description
+      my $str = '';
+      $str .= quote($c->param('filterBy'));
+      $str .= ' ' . ($c->param('filterOp') // 'equals');
+      if (my $v = $c->param('filterValue')) {
+        $str .= ' ' . quote($v);
+      };
+
       my $query = $c->url_with;
 
       # Remove filter parameters
       $query->query->remove('filterBy')->remove('filterOp')->remove('filterValue');
 
-      # Add remove link
-      $c->link_to(b('<span>' . $del_marker . '</span>'), $query, class => 'remove-filter');
+      # Escape filter description
+      return xml_escape($str) . ' ' .
+        # Add remove link
+        $c->link_to(b('<span>' . $del_marker . '</span>'), $query, class => 'remove-filter');
     }
   );
 
@@ -205,17 +216,7 @@ sub register {
       # Add filter info
       if ($result->{filterBy}) {
         $table .= '    <tr class="oro-filter"><th colspan="' . scalar @order . '">';
-
-        # Add filter description
-        my $str = quote($result->{filterBy});
-        $str .= ' ' . $result->{filterOp};
-        if ($result->{filterValue}) {
-          $str .= ' ' . quote($result->{filterValue});
-        };
-
-        # Escape filter description
-        $table .= xml_escape($str);
-        $table .= ' ' . $c->oro_filter_line($param{del_marker});
+        $table .= $c->oro_filter_line($param{del_marker});
         $table .= "</th></tr>\n";
       };
 

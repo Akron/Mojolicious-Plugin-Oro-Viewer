@@ -215,6 +215,13 @@ sub register {
 
       # Add filter info
       if ($result->{filterBy}) {
+
+        # Set filter parameter
+        $c->param(filterBy => $result->{filterBy});
+        $c->param(filterValue => $result->{filterValue}) if $result->{filterValue};
+        $c->param(filterOp => $result->{filterOp}) if $result->{filterOp};
+
+        # Pass to filter line
         $table .= '    <tr class="oro-filter"><th colspan="' . scalar @order . '">';
         $table .= $c->oro_filter_line($param{del_marker});
         $table .= "</th></tr>\n";

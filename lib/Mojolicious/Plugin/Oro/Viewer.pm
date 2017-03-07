@@ -72,7 +72,7 @@ sub register {
 
   # Line with filter information
   $mojo->helper(
-    oro_filter_line => sub {
+    oro_filter_rule => sub {
       my ($c, $del_marker) = @_;
       $del_marker //= $param->{del_marker};
 
@@ -91,7 +91,7 @@ sub register {
 
       # Escape filter description
       return b(
-        xml_escape($str) . ' ' .
+        '<span class="oro-filter-rule">' . xml_escape($str) . '</span> ' .
           # Add remove link
           $c->link_to(b('<span>' . $del_marker . '</span>'), $query, class => 'remove-filter')
         );
@@ -225,7 +225,7 @@ sub register {
 
         # Pass to filter line
         $table .= '    <tr class="oro-filter"><th colspan="' . scalar @order . '">';
-        $table .= $c->oro_filter_line($param{del_marker});
+        $table .= $c->oro_filter_rule($param{del_marker});
         $table .= "</th></tr>\n";
       };
 

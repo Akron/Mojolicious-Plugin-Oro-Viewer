@@ -90,9 +90,11 @@ sub register {
       $query->query->remove('filterBy')->remove('filterOp')->remove('filterValue');
 
       # Escape filter description
-      return xml_escape($str) . ' ' .
-        # Add remove link
-        $c->link_to(b('<span>' . $del_marker . '</span>'), $query, class => 'remove-filter');
+      return b(
+        xml_escape($str) . ' ' .
+          # Add remove link
+          $c->link_to(b('<span>' . $del_marker . '</span>'), $query, class => 'remove-filter')
+        );
     }
   );
 

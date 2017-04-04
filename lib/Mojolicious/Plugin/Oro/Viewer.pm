@@ -76,6 +76,8 @@ sub register {
       my ($c, $del_marker) = @_;
       $del_marker //= $param->{del_marker};
 
+      return '' unless $c->param('filterBy');
+
       # Add filter description
       my $str = '';
       $str .= quote($c->param('filterBy'));

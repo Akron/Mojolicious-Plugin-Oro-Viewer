@@ -146,13 +146,18 @@ $t->get_ok('/line?sortBy=prename&sortOrder=ascending&filterBy=sex&filterOp=equal
   ->element_exists('a.remove-filter span');
 
 
+# No filter given
 $t->get_ok('/line?sortBy=prename&sortOrder=ascending')
   ->element_exists_not('span.oro-filter-rule')
   ->element_exists_not('a.remove-filter')
   ->element_exists_not('a.remove-filter span');
 
+$t->get_ok('/line?sortBy=prename&sortOrder=ascending&filterBy=<bad>&filterOp=equals&filterValue=<worse>')
+  ->text_is('span.oro-filter-rule', '"<bad>" equals "<worse>"')
+  ->content_like(qr!&quot;&lt;bad&gt;&quot; equals &quot;&lt;worse&gt;&quot;!)
+  ->element_exists('a.remove-filter')
+  ->element_exists('a.remove-filter span');
 
-# TODO: Check for injection!
 
 
 # Value not existent

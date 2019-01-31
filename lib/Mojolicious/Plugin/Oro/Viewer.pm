@@ -3,13 +3,15 @@ use Mojo::Base 'Mojolicious::Plugin';
 use Mojo::ByteStream 'b';
 use Mojo::Util qw/xml_escape quote/;
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 # Todo: Support fields that are not columns (but may be colored)
 # Todo: Support filter_by_row (which filters by the value of a field,
 #       making all row values links)
 # Todo: Support filter_by_search (which introduces an input field
 #       for searching below the table header)
+# Todo: Compare with
+#       https://simonwillison.net/2017/Nov/13/datasette/
 
 # Support Javascript by providing javascript code that takes
 # the pagination and uses it as a template for further pagination
@@ -59,12 +61,12 @@ sub register {
 
       return $c->link_to(
         $view // $value,
-        $c->url_with->query([
+        $c->url_with->query({
           startPage   => 1,
           filterBy    => $key,
           filterOp    => 'equals',
           filterValue => $value
-        ])
+        })
       );
     }
   );
@@ -307,7 +309,7 @@ sub register {
           };
 
           # Create links
-          $th = '<a href="' . xml_escape($c->url_with->query([%hash])) . '">' .
+          $th = '<a href="' . xml_escape($c->url_with->query(\%hash)) . '">' .
             $_->[0] . '</a>';
         }
         else {
@@ -330,7 +332,7 @@ sub register {
       $table .= $c->pagination(
         $result->{startPage},
         $pages,
-        $c->url_with->query([startPage => '{page}'])
+        $c->url_with->query({startPage => '{page}'})
       );
       $table .= "</td></tr>\n";
       $table .= "  </tfoot>\n";

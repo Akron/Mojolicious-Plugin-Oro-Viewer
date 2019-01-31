@@ -3,8 +3,8 @@ use Test::Mojo;
 use Test::More;
 use Mojolicious::Lite;
 use Mojo::DOM;
-
-use lib '../lib', 'lib';
+use Mojo::URL;
+use Data::Dumper;
 
 plugin Oro => {
   default => {
@@ -437,7 +437,7 @@ $t->get_ok('/secure?sortBy=surname&count=2&fields=prename,age,check,sex&startPag
   ->text_is('.pagination a:nth-last-child(2) span', 3);
 
 
-$t->get_ok('/sortcallback?sortBy=surname&count=2&fields=prename,age,check,sex&startPage=2&filterBy=surname&filterOp=startsWith&filterValue=W')
+my $href = $t->get_ok('/sortcallback?sortBy=surname&count=2&fields=prename,age,check,sex&startPage=2&filterBy=surname&filterOp=startsWith&filterValue=W')
   ->text_is('thead tr th.integer a', 'Alter')
   ->text_is('tbody tr td', 'William')
   ->element_exists_not('tbody tr td.test3')
@@ -455,8 +455,20 @@ $t->get_ok('/sortcallback?sortBy=surname&count=2&fields=prename,age,check,sex&st
   ->text_is('th:nth-child(3) a', 'Alter')
   ->text_is('th:nth-child(4)', 'Action')
   ->text_is('.pagination a:nth-last-child(2) span', 3)
-;
+  ->tx->res->dom->at('th.oro-sortable.oro-ascending a')->attr('href');
 
+my $new_url = Mojo::URL->new($href)->query->pairs;
+
+my %checkDoubleNames;
+for (my $i = 0; $i <= $#{$new_url}; $i+=2) {
+  if ($checkDoubleNames{$new_url->[$i]}) {
+    ok(0,'Parameter ' . $new_url->[$i] . ' already defined');
+  }
+  else {
+    ok(1,'Parameter ' . $new_url->[$i]);
+  };
+  $checkDoubleNames{$new_url->[$i]} = 1;
+};
 
 done_testing;
 __END__

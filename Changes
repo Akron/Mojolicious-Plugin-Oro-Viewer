@@ -1,3 +1,6 @@
+0.05 2019-01-31
+        - Fix link parameter duplication bug.
+
 0.04 2017-02-18
         - Introduced filter.
         - Added oro_filter_by and oro_filter_line helpers.
